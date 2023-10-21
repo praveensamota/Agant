@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Index Page</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 50px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .error-message {
+            color: #dc3545;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">Search for PDBID</h1>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ form.pdbid.label_tag }}
+                {{ form.pdbid }}
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+        {% if agent %}
+        <hr class="my-4">
+        <h2 class="mb-4">Search Results:</h2>
+        <p><strong>Ligand ID:</strong> {{ agent.l_id }}</p>
+        <p><strong>Type:</strong> {{ agent_type }}</p>
+        <p><strong>Uniprot ID:</strong> <a href="https://www.uniprot.org/uniprot/{{ agent.uniprotid }}" target="_blank">{{ agent.uniprotid }}</a></p>
+        {% elif error_message %}
+        <div class="error-message">{{ error_message }}</div>
+        {% endif %}
+    </div>
+</body>
+</html>
