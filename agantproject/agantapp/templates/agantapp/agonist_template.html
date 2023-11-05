@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-5">
+    <h1 class="text-center mb-4">Agonist Data</h1>
+    <div class="form-group">
+        <label class="form-label mt-4" for="searchInput">Search</label>
+        <input type="text" class="form-control" placeholder="Search by PDB or Title" id="searchInput">
+    </div>
+    <div class="table-responsive">
+    <table class="table table-bordered custom-table-width" id="agonistTable">
+        <thead class="thead-dark">
+            <tr class="table-dark">
+                <th>PDB</th>
+                <th>Title</th>
+                <th>Response</th>
+                <th>Ligand</th>
+                <th>Uniprot Accession</th>
+                <th>Ligand Volume</th>
+                <th>Pocket Volume</th>
+                <th>Drug Score</th>
+                <th>Average B-Factor</th>
+                <th>All Atoms RSA Cavity</th>
+                <th>Predicted Average pKd</th>
+                <th>Total Surface Area (A^2)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in page_obj %}
+            {% if forloop.counter|divisibleby:2 %}
+            <tr class="table-active"> <!-- Use table-active class for alternating rows -->
+            {% else %}
+            <tr> <!-- Default table row style for other rows -->
+            {% endif %}
+                <td><a href="https://www.rcsb.org/structure/{{ entry.PDB }}" target="_blank">{{entry.PDB}}</a></td>
+                <td>{{ entry.Title }}</td>
+                <td>{{ entry.Response }}</td>
+                <td>{{ entry.Ligand }}</td>
+                <td>{{ entry.Uniprot_accession }}</td>
+                <td>{{ entry.Lig_vol }}</td>
+                <td>{{ entry.Pock_vol }}</td>
+                <td>{{ entry.DrugScore }}</td>
+                <td>{{ entry.Average_B_Factor }}</td>
+                <td>{{ entry.All_atoms_rsa_cavity }}</td>
+                <td>{{ entry.Predicted_Average_pKd }}</td>
+                <td>{{ entry.Total_Surface_Area }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="12">No data available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+     <!-- Pagination controls -->
+     <div class="pagination-container">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">&laquo;</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">&laquo;</span>
+            </li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">&raquo;</span>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+
+</div>
+
+<style>
+    .table td, .table th {
+        font-size: 14px;
+        padding: 6px;
+    }
+    .custom-table-width {
+        width: 100%;
+    }
+</style>
+
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const agonistTable = document.getElementById('agonistTable');
+    
+    searchInput.addEventListener('input', async () => {
+        const searchQuery = searchInput.value;
+        const response_type = 'Agonist';
+        try {
+            const response = await fetch(`/search/?query=${searchQuery}&type=${response_type}`);
+            const data = await response.json();
+    
+            // Clear the table body
+            const tableBody = agonistTable.querySelector('tbody');
+            tableBody.innerHTML = '';
+            
+            let index = 0;
+            // Check if data is not empty, then update the table content
+            if (data.length > 0) {
+                data.forEach(entry => {
+                    const row = document.createElement('tr');
+                    // Create and append table cells based on entry properties
+                    // Example: row.innerHTML = `<td>${entry.PDB}</td>...`;
+                    row.classList.add(index % 2 === 0 ? 'table-active' : 'table-row');
+                    index++;
+                    
+                    row.innerHTML = `
+                        <td><a href="${entry.PDB_URL}" target="_blank">${entry.PDB}</a></td>
+                        <td>${entry.Title}</td>
+                        <td>${entry.Response}</td>
+                        <td>${entry.Ligand}</td>
+                        <td>${entry.Uniprot_accession}</td>
+                        <td>${entry.Lig_vol}</td>
+                        <td>${entry.Pock_vol}</td>
+                        <td>${entry.DrugScore}</td>
+                        <td>${entry.Average_B_Factor}</td>
+                        <td>${entry.All_atoms_rsa_cavity}</td>
+                        <td>${entry.Predicted_Average_pKd}</td>
+                        <td>${entry.Total_Surface_Area}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } else {
+                // If no results, display a message in the table
+                const noDataMessageRow = document.createElement('tr');
+                const noDataMessageCell = document.createElement('td');
+                noDataMessageCell.colSpan = 12;
+                noDataMessageCell.textContent = 'No matching records found.';
+                noDataMessageRow.appendChild(noDataMessageCell);
+                tableBody.appendChild(noDataMessageRow);
+            }
+        } catch (error) {
+            console.error('Error occurred during search:', error);
+        }
+    });
+
+</script>
+
+{% endblock %}
